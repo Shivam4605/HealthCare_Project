@@ -1,0 +1,36 @@
+name: healthcare
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  cloud_firestore: ^6.1.2
+  firebase_auth: ^6.1.4
+  firebase_core: ^4.4.0
+  firebase_storage: ^13.0.6
+  flutter:
+    sdk: flutter
+  flutter_svg: ^2.2.3
+  google_fonts: ^8.0.1
+  lottie: ^3.3.2
+  provider: ^6.1.5+1
+  rive: ^0.14.2
+  shared_preferences: ^2.5.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/app_images/
+    - assets/app_lottie_animation/
+    - assets/app_images/doctor1.svg
+    - assets/app_images/doctor2.svg
+    - assets/app_images/doctor3.svg
