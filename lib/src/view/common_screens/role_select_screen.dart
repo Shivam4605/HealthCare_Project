@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:healthcare/src/common_widgets/common_snackbar.dart';
+import 'package:healthcare/src/controller/user_provider/user_role_info_provider.dart';
 import 'package:healthcare/src/util/app_color.dart';
+import 'package:healthcare/src/view/common_screens/auth_select_screen.dart';
+import 'package:provider/provider.dart';
 
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
@@ -108,6 +111,10 @@ class _AdvancedRoleSelectionScreenState extends State<RoleSelectionScreen>
     }
 
     final selectedRole = _roles[_selectedRoleIndex!];
+
+    final userInfoProvider = context.read<UserInfoProvider>();
+    userInfoProvider.setSelectedRole(selectedRole.title);
+
     _navigateToNextScreen(selectedRole);
   }
 
@@ -118,10 +125,15 @@ class _AdvancedRoleSelectionScreenState extends State<RoleSelectionScreen>
       backgroundColor: Colors.redAccent,
       durationSeconds: 2,
       textColor: Colors.white,
+      icon: Icons.info_outline,
     );
   }
 
   void _navigateToNextScreen(UserRole role) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AuthSelectScreen()),
+    );
     debugPrint('Selected role: ${role.title}');
   }
 

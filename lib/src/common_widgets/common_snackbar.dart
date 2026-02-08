@@ -7,7 +7,7 @@ class CommonSnackbar {
     required Color backgroundColor,
     required Color textColor,
     required int durationSeconds,
-    IconData icon = Icons.info_outline,
+    required IconData icon,
   }) {
     final overlay = Overlay.of(context);
     late OverlayEntry overlayEntry;
