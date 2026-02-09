@@ -2,9 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:healthcare/src/controller/local_storage/user_credential_local.dart';
 import 'package:healthcare/src/util/app_assets.dart';
 import 'package:healthcare/src/util/app_color.dart';
 import 'package:healthcare/src/view/common_screens/onboarding_screen.dart';
+import 'package:healthcare/src/view/doctor_module/doctor_home_screen.dart';
+import 'package:healthcare/src/view/medical_module/medical_staff_home_screen.dart';
+import 'package:healthcare/src/view/patient_module/patient_home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -65,6 +69,86 @@ class _SplashScreenState extends State<SplashScreen>
     });
 
     Timer(Duration(seconds: 3), () {
+      checkLoginStatus();
+    });
+  }
+
+  void checkLoginStatus() async {
+    UserCredentials userCredentials = UserCredentials();
+    Map<String, dynamic> data = await userCredentials.fetchUserCredentials();
+    if (data['isLoggedIn'] && data['selectedRole'] == 'Patient') {
+      Navigator.pushAndRemoveUntil(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, animation, __) => PatientHomeScreen(),
+          transitionsBuilder: (_, animation, __, child) {
+            const begin = Offset(1.0, 0.0);
+            const end = Offset.zero;
+            const curve = Curves.easeInOutCubic;
+
+            final tween = Tween(
+              begin: begin,
+              end: end,
+            ).chain(CurveTween(curve: curve));
+
+            return SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
+        ),
+        (route) => false,
+      );
+    } else if (data['isLoggedIn'] && data['selectedRole'] == 'Doctor') {
+      Navigator.pushAndRemoveUntil(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, animation, __) => DoctorHomeScreen(),
+          transitionsBuilder: (_, animation, __, child) {
+            const begin = Offset(1.0, 0.0);
+            const end = Offset.zero;
+            const curve = Curves.easeInOutCubic;
+
+            final tween = Tween(
+              begin: begin,
+              end: end,
+            ).chain(CurveTween(curve: curve));
+
+            return SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
+        ),
+        (route) => false,
+      );
+    } else if (data['isLoggedIn'] && data['selectedRole'] == 'Medical Staff') {
+      Navigator.pushAndRemoveUntil(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, animation, __) => MedicalStaffHomeScreen(),
+          transitionsBuilder: (_, animation, __, child) {
+            const begin = Offset(1.0, 0.0);
+            const end = Offset.zero;
+            const curve = Curves.easeInOutCubic;
+
+            final tween = Tween(
+              begin: begin,
+              end: end,
+            ).chain(CurveTween(curve: curve));
+
+            return SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
+        ),
+        (route) => false,
+      );
+    } else {
       Navigator.pushAndRemoveUntil(
         context,
         PageRouteBuilder(
@@ -88,7 +172,7 @@ class _SplashScreenState extends State<SplashScreen>
         ),
         (route) => false,
       );
-    });
+    }
   }
 
   @override

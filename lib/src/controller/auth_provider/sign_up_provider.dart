@@ -15,6 +15,17 @@ class SignUpProvider with ChangeNotifier {
     required TextEditingController password,
     required TextEditingController userName,
   }) async {
+    if (userName.text.trim().isEmpty) {
+      CommonSnackbar.showAnimatedSnackBar(
+        context: context,
+        message: "Username is required",
+        backgroundColor: Colors.redAccent,
+        durationSeconds: 2,
+        textColor: Colors.white,
+        icon: Icons.info_outline,
+      );
+      return;
+    }
     if (email.text.trim().isEmpty) {
       CommonSnackbar.showAnimatedSnackBar(
         context: context,
@@ -31,18 +42,6 @@ class SignUpProvider with ChangeNotifier {
       CommonSnackbar.showAnimatedSnackBar(
         context: context,
         message: "Password is required",
-        backgroundColor: Colors.redAccent,
-        durationSeconds: 2,
-        textColor: Colors.white,
-        icon: Icons.info_outline,
-      );
-      return;
-    }
-
-    if (userName.text.trim().isEmpty) {
-      CommonSnackbar.showAnimatedSnackBar(
-        context: context,
-        message: "Username is required",
         backgroundColor: Colors.redAccent,
         durationSeconds: 2,
         textColor: Colors.white,
@@ -68,9 +67,7 @@ class SignUpProvider with ChangeNotifier {
         textColor: Colors.white,
         icon: Icons.check_circle_outline,
       );
-      email.clear();
-      password.clear();
-      userName.clear();
+
       Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
       String message;
@@ -111,6 +108,9 @@ class SignUpProvider with ChangeNotifier {
       );
       log("Sign up error: $e");
     } finally {
+      email.clear();
+      password.clear();
+      userName.clear();
       isLoading = false;
       notifyListeners();
     }

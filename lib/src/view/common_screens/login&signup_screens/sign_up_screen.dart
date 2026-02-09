@@ -154,7 +154,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                     SizedBox(height: responsive.verticalPadding(30)),
 
                     Consumer(
-                      builder: (context, SignUpProvider signUpProvider, _) {
+                      builder: (context, signUpProvider, _) {
                         log("Call consumer oof the signup provider");
                         return _buildSignUpButton(responsive);
                       },

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:healthcare/src/common_widgets/circular_progress_indicator.dart';
 import 'package:healthcare/src/common_widgets/smooth_transitions.dart';
 import 'package:healthcare/src/controller/auth_provider/login_provider.dart';
+import 'package:healthcare/src/controller/user_provider/user_role_info_provider.dart';
 import 'package:healthcare/src/util/app_color.dart';
 import 'package:healthcare/src/view/common_screens/login&signup_screens/forgot_password_screen.dart';
 import 'package:provider/provider.dart';
@@ -59,16 +60,37 @@ class _LoginScreenState extends State<LoginScreen>
   void _handleForgotPassword() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+      PageRouteBuilder(
+        pageBuilder: (_, animation, __) => ForgotPasswordScreen(),
+        transitionsBuilder: (_, animation, __, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOutCubic;
+
+          final tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
     );
     debugPrint('Navigate to Forgot Password');
   }
 
-  void _handleSignUp() {
-    debugPrint('Navigate to Sign Up');
-  }
-
   void _handleGoogleSignIn() {
+    Provider.of<LoginProvider>(context, listen: false).signInWithGoogle(
+      context: context,
+      userType: Provider.of<UserInfoProvider>(
+        context,
+        listen: false,
+      ).userModel.selectedRole,
+    );
     debugPrint('Sign in with Google');
   }
 
@@ -140,47 +162,47 @@ class _LoginScreenState extends State<LoginScreen>
               ),
               child: Form(
                 key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SizedBox(height: responsive.verticalPadding(30)),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(height: responsive.verticalPadding(30)),
 
-                    _buildEmailField(responsive),
+                      _buildEmailField(responsive),
 
-                    SizedBox(height: responsive.verticalPadding(16)),
+                      SizedBox(height: responsive.verticalPadding(16)),
 
-                    _buildPasswordField(responsive),
+                      _buildPasswordField(responsive),
 
-                    SizedBox(height: responsive.verticalPadding(12)),
+                      SizedBox(height: responsive.verticalPadding(12)),
 
-                    _buildForgotPassword(responsive),
+                      _buildForgotPassword(responsive),
 
-                    SizedBox(height: responsive.verticalPadding(30)),
+                      SizedBox(height: responsive.verticalPadding(30)),
 
-                    Consumer<LoginProvider>(
-                      builder: (context, provider, _) {
-                        return _buildLoginButton(responsive, provider);
-                      },
-                    ),
+                      Consumer<LoginProvider>(
+                        builder: (context, provider, _) {
+                          return _buildLoginButton(responsive, provider);
+                        },
+                      ),
 
-                    SizedBox(height: responsive.verticalPadding(20)),
+                      SizedBox(height: responsive.verticalPadding(20)),
 
-                    _buildSignUpLink(responsive),
+                      SizedBox(height: responsive.verticalPadding(30)),
 
-                    SizedBox(height: responsive.verticalPadding(30)),
+                      _buildOrDivider(responsive),
 
-                    _buildOrDivider(responsive),
+                      SizedBox(height: responsive.verticalPadding(30)),
 
-                    SizedBox(height: responsive.verticalPadding(30)),
+                      _buildGoogleButton(responsive),
+                      SizedBox(height: responsive.verticalPadding(12)),
+                      _buildAppleButton(responsive),
+                      SizedBox(height: responsive.verticalPadding(12)),
+                      _buildFacebookButton(responsive),
 
-                    _buildGoogleButton(responsive),
-                    SizedBox(height: responsive.verticalPadding(12)),
-                    _buildAppleButton(responsive),
-                    SizedBox(height: responsive.verticalPadding(12)),
-                    _buildFacebookButton(responsive),
-
-                    SizedBox(height: responsive.verticalPadding(40)),
-                  ],
+                      SizedBox(height: responsive.verticalPadding(40)),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -333,39 +355,6 @@ class _LoginScreenState extends State<LoginScreen>
                   letterSpacing: 0.5,
                 ),
               ),
-      ),
-    );
-  }
-
-  Widget _buildSignUpLink(ResponsiveHelper responsive) {
-    return Center(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "Don't have an account? ",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: responsive.fontSize(14),
-            ),
-          ),
-          TextButton(
-            onPressed: _handleSignUp,
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(
-              'Sign Up',
-              style: TextStyle(
-                color: AppColors.midblue,
-                fontSize: responsive.fontSize(14),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
