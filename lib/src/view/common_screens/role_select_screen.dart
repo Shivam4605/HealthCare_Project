@@ -112,7 +112,10 @@ class _AdvancedRoleSelectionScreenState extends State<RoleSelectionScreen>
 
     final selectedRole = _roles[_selectedRoleIndex!];
 
-    final userInfoProvider = context.read<UserInfoProvider>();
+    final userInfoProvider = Provider.of<UserInfoProvider>(
+      context,
+      listen: false,
+    );
     userInfoProvider.setSelectedRole(selectedRole.title);
 
     _navigateToNextScreen(selectedRole);
@@ -132,7 +135,25 @@ class _AdvancedRoleSelectionScreenState extends State<RoleSelectionScreen>
   void _navigateToNextScreen(UserRole role) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const AuthSelectScreen()),
+      PageRouteBuilder(
+        pageBuilder: (_, animation, __) => AuthSelectScreen(),
+        transitionsBuilder: (_, animation, __, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOutCubic;
+
+          final tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
     );
     debugPrint('Selected role: ${role.title}');
   }
@@ -206,7 +227,7 @@ class _AdvancedRoleSelectionScreenState extends State<RoleSelectionScreen>
         ),
         SizedBox(height: responsive.verticalPadding(12)),
         Text(
-          'Medics',
+          'Medics+',
           style: TextStyle(
             fontSize: responsive.fontSize(28),
             fontWeight: FontWeight.bold,

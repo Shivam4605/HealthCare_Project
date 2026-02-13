@@ -96,7 +96,7 @@ class _AdvancedOnboardingScreenState extends State<AdvancedOnboardingScreen>
   void _navigateToNextScreen() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
+      MaterialPageRoute(builder: (context) => RoleSelectionScreen()),
     );
   }
 

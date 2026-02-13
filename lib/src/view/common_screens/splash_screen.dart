@@ -2,9 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:healthcare/src/controller/local_storage/user_credential_local.dart';
 import 'package:healthcare/src/util/app_assets.dart';
 import 'package:healthcare/src/util/app_color.dart';
 import 'package:healthcare/src/view/common_screens/onboarding_screen.dart';
+import 'package:healthcare/src/view/doctor_module/doctor_home_screen.dart';
+import 'package:healthcare/src/view/medical_module/medical_staff_home_screen.dart';
+import 'package:healthcare/src/view/patient_module/main_scaffold.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -65,30 +69,131 @@ class _SplashScreenState extends State<SplashScreen>
     });
 
     Timer(Duration(seconds: 3), () {
+      checkLoginStatus();
+    });
+  }
+
+  void checkLoginStatus() async {
+    UserCredentials userCredentials = UserCredentials();
+    Map<String, dynamic> data = await userCredentials.fetchUserCredentials();
+    if (data['isLoggedIn'] && data['selectedRole'] == 'Patient') {
       Navigator.pushAndRemoveUntil(
         context,
+
         PageRouteBuilder(
-          pageBuilder: (_, animation, __) => AdvancedOnboardingScreen(),
-          transitionsBuilder: (_, animation, __, child) {
-            const begin = Offset(1.0, 0.0);
-            const end = Offset.zero;
-            const curve = Curves.easeInOutCubic;
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              MainScaffold(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            var scaleTween = Tween<double>(
+              begin: 0.6,
+              end: 1.0,
+            ).chain(CurveTween(curve: Curves.elasticOut));
 
-            final tween = Tween(
-              begin: begin,
-              end: end,
-            ).chain(CurveTween(curve: curve));
+            var fadeTween = Tween<double>(
+              begin: 0.0,
+              end: 1.0,
+            ).chain(CurveTween(curve: Curves.easeIn));
 
-            return SlideTransition(
-              position: animation.drive(tween),
-              child: child,
+            return FadeTransition(
+              opacity: animation.drive(fadeTween),
+              child: ScaleTransition(
+                scale: animation.drive(scaleTween),
+                child: child,
+              ),
             );
           },
           transitionDuration: const Duration(milliseconds: 500),
         ),
         (route) => false,
       );
-    });
+    } else if (data['isLoggedIn'] && data['selectedRole'] == 'Doctor') {
+      Navigator.pushAndRemoveUntil(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              DoctorHomeScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            var scaleTween = Tween<double>(
+              begin: 0.6,
+              end: 1.0,
+            ).chain(CurveTween(curve: Curves.elasticOut));
+
+            var fadeTween = Tween<double>(
+              begin: 0.0,
+              end: 1.0,
+            ).chain(CurveTween(curve: Curves.easeIn));
+
+            return FadeTransition(
+              opacity: animation.drive(fadeTween),
+              child: ScaleTransition(
+                scale: animation.drive(scaleTween),
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
+        ),
+        (route) => false,
+      );
+    } else if (data['isLoggedIn'] && data['selectedRole'] == 'Medical Staff') {
+      Navigator.pushAndRemoveUntil(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              MedicalStaffHomeScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            var scaleTween = Tween<double>(
+              begin: 0.6,
+              end: 1.0,
+            ).chain(CurveTween(curve: Curves.elasticOut));
+
+            var fadeTween = Tween<double>(
+              begin: 0.0,
+              end: 1.0,
+            ).chain(CurveTween(curve: Curves.easeIn));
+
+            return FadeTransition(
+              opacity: animation.drive(fadeTween),
+              child: ScaleTransition(
+                scale: animation.drive(scaleTween),
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
+        ),
+        (route) => false,
+      );
+    } else {
+      Navigator.pushAndRemoveUntil(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              AdvancedOnboardingScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            var scaleTween = Tween<double>(
+              begin: 0.6,
+              end: 1.0,
+            ).chain(CurveTween(curve: Curves.elasticOut));
+
+            var fadeTween = Tween<double>(
+              begin: 0.0,
+              end: 1.0,
+            ).chain(CurveTween(curve: Curves.easeIn));
+
+            return FadeTransition(
+              opacity: animation.drive(fadeTween),
+              child: ScaleTransition(
+                scale: animation.drive(scaleTween),
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
+        ),
+        (route) => false,
+      );
+    }
   }
 
   @override

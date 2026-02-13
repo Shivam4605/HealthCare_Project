@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:healthcare/src/common_widgets/circular_progress_indicator.dart';
 import 'package:healthcare/src/common_widgets/smooth_transitions.dart';
+import 'package:healthcare/src/controller/auth_provider/forgot_password_provider.dart';
 import 'package:healthcare/src/util/app_color.dart';
+import 'package:provider/provider.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -13,9 +16,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _controller = TextEditingController();
-  bool _isEmailSelected = true;
-  bool _isLoading = false;
-  bool _isInputValid = false;
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -25,7 +25,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   void initState() {
     super.initState();
     _initializeAnimations();
-    _controller.addListener(_validateInput);
   }
 
   void _initializeAnimations() {
@@ -46,72 +45,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     _animationController.forward();
   }
 
-  void _validateInput() {
-    if (_isEmailSelected) {
-      setState(() {
-        _isInputValid =
-            _controller.text.isNotEmpty &&
-            _controller.text.contains('@') &&
-            _controller.text.contains('.');
-      });
-    } else {
-      setState(() {
-        _isInputValid =
-            _controller.text.isNotEmpty && _controller.text.length >= 10;
-      });
-    }
-  }
-
   @override
   void dispose() {
     _controller.dispose();
     _animationController.dispose();
     super.dispose();
-  }
-
-  void _toggleInputType(bool isEmail) {
-    setState(() {
-      _isEmailSelected = isEmail;
-      _controller.clear();
-      _isInputValid = false;
-    });
-  }
-
-  Future<void> _handleResetPassword() async {
-    if (_formKey.currentState!.validate() && _isInputValid) {
-      setState(() => _isLoading = true);
-
-      await Future.delayed(const Duration(seconds: 2));
-
-      setState(() => _isLoading = false);
-
-      if (mounted) {
-        _showSuccessDialog();
-      }
-    }
-  }
-
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Check Your Email'),
-        content: Text(
-          'We have sent a password reset link to ${_controller.text}',
-          style: const TextStyle(color: Colors.grey),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-            },
-            child: const Text('OK', style: TextStyle(color: Color(0xFF13BDAC))),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -126,7 +64,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
         elevation: 0,
         leading: Padding(
           padding: const EdgeInsets.only(left: 14),
-
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -137,7 +74,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                 child: Container(
                   height: 40,
                   width: 40,
-
                   decoration: BoxDecoration(
                     color: AppColors.midblue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
@@ -179,17 +115,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
 
                       _buildDescription(responsive),
 
-                      SizedBox(height: responsive.verticalPadding(30)),
-
-                      _buildToggleButtons(responsive),
-
                       SizedBox(height: responsive.verticalPadding(24)),
 
                       _buildInputField(responsive),
 
                       SizedBox(height: responsive.verticalPadding(30)),
 
-                      _buildResetButton(responsive),
+                      Consumer<ForgotPasswordProvider>(
+                        builder: (context, provider, _) {
+                          return _buildResetButton(responsive);
+                        },
+                      ),
 
                       SizedBox(height: responsive.verticalPadding(40)),
                     ],
@@ -225,65 +161,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     );
   }
 
-  Widget _buildToggleButtons(ResponsiveHelper responsive) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(4),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildToggleButton(
-              label: 'Email',
-              isSelected: _isEmailSelected,
-              onTap: () => _toggleInputType(true),
-              responsive: responsive,
-            ),
-          ),
-
-          Expanded(
-            child: _buildToggleButton(
-              label: 'Phone',
-              isSelected: !_isEmailSelected,
-              onTap: () => _toggleInputType(false),
-              responsive: responsive,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildToggleButton({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-    required ResponsiveHelper responsive,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(vertical: responsive.verticalPadding(12)),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.midblue : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: responsive.fontSize(15),
-            fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : Colors.grey[600],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildInputField(ResponsiveHelper responsive) {
     return Container(
       decoration: BoxDecoration(
@@ -293,31 +170,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
       ),
       child: TextFormField(
         controller: _controller,
-        keyboardType: _isEmailSelected
-            ? TextInputType.emailAddress
-            : TextInputType.phone,
+        keyboardType: TextInputType.emailAddress,
         style: TextStyle(
           fontSize: responsive.fontSize(15),
           color: const Color(0xFF2E3E5C),
         ),
         decoration: InputDecoration(
-          hintText: _isEmailSelected ? 'Enter your email' : 'Enter your phone',
+          hintText: 'Enter your email',
           hintStyle: TextStyle(
             color: Colors.grey[400],
             fontSize: responsive.fontSize(15),
           ),
           prefixIcon: Icon(
-            _isEmailSelected ? Icons.email_outlined : Icons.phone_outlined,
+            Icons.email_outlined,
             color: Colors.grey[400],
             size: 22,
           ),
-          suffixIcon: _isInputValid
-              ? const Icon(
-                  Icons.check_circle,
-                  color: Color(0xFF13BDAC),
-                  size: 22,
-                )
-              : null,
+          suffixIcon: Icon(
+            Icons.check_circle,
+            color: AppColors.midblue,
+            size: 22,
+          ),
+
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(
             horizontal: responsive.horizontalPadding(16),
@@ -332,25 +206,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     return SizedBox(
       height: responsive.buttonHeight(),
       child: ElevatedButton(
-        onPressed: _isLoading ? null : _handleResetPassword,
+        onPressed: () async {
+          FocusScope.of(context).unfocus();
+          Provider.of<ForgotPasswordProvider>(
+            context,
+            listen: false,
+          ).forgotPassword(context: context, email: _controller);
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.midblue,
           foregroundColor: Colors.white,
           elevation: 0,
           disabledBackgroundColor: AppColors.midblue.withOpacity(0.6),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: _isLoading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
+        child:
+            Provider.of<ForgotPasswordProvider>(
+              context,
+              listen: false,
+            ).isLoading
+            ? CustomCircularProgressIndicator().circularProgressIndicator()
             : Text(
                 'Reset Password',
                 style: TextStyle(

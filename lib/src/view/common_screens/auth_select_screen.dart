@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:healthcare/src/common_widgets/smooth_transitions.dart';
+import 'package:healthcare/src/controller/user_provider/user_role_info_provider.dart';
 import 'package:healthcare/src/util/app_color.dart' show AppColors;
 import 'package:healthcare/src/view/common_screens/login&signup_screens/login_screen.dart';
 import 'package:healthcare/src/view/common_screens/login&signup_screens/sign_up_screen.dart';
+import 'package:provider/provider.dart';
 
 class AuthSelectScreen extends StatefulWidget {
   const AuthSelectScreen({super.key});
@@ -106,7 +108,25 @@ class _AuthSelectScreenState extends State<AuthSelectScreen>
   void _onLoginPressed() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      PageRouteBuilder(
+        pageBuilder: (_, animation, __) => LoginScreen(),
+        transitionsBuilder: (_, animation, __, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOutCubic;
+
+          final tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
     );
 
     debugPrint('Navigate to Login Screen');
@@ -115,7 +135,25 @@ class _AuthSelectScreenState extends State<AuthSelectScreen>
   void _onSignUpPressed() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const SignUpScreen()),
+      PageRouteBuilder(
+        pageBuilder: (_, animation, __) => SignUpScreen(),
+        transitionsBuilder: (_, animation, __, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOutCubic;
+
+          final tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
     );
     debugPrint('Navigate to Sign Up Screen');
   }
@@ -127,60 +165,69 @@ class _AuthSelectScreenState extends State<AuthSelectScreen>
 
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: responsive.horizontalPadding(24),
-          ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      SmoothNavigation.smoothPop(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Container(
-                        height: 40,
-                        width: 40,
-                        decoration: BoxDecoration(
-                          color: AppColors.midblue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            size: responsive.fontSize(20),
-                            color: AppColors.midblue,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: responsive.horizontalPadding(24),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            SmoothNavigation.smoothPop(context);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: Container(
+                              height: 40,
+                              width: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.midblue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.arrow_back_ios_new_rounded,
+                                  size: responsive.fontSize(20),
+                                  color: AppColors.midblue,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ),
-                ],
+
+                    const Spacer(flex: 2),
+
+                    _buildAnimatedLogo(responsive),
+
+                    SizedBox(height: responsive.verticalPadding(50)),
+
+                    _buildContent(responsive),
+
+                    SizedBox(height: responsive.verticalPadding(50)),
+
+                    _buildButtons(responsive),
+
+                    const Spacer(flex: 2),
+
+                    _buildBottomIndicator(responsive),
+
+                    SizedBox(height: responsive.verticalPadding(10)),
+                  ],
+                ),
               ),
-              const Spacer(flex: 2),
-
-              _buildAnimatedLogo(responsive),
-
-              SizedBox(height: responsive.verticalPadding(50)),
-
-              _buildContent(responsive),
-
-              SizedBox(height: responsive.verticalPadding(50)),
-
-              _buildButtons(responsive),
-
-              const Spacer(flex: 2),
-
-              _buildBottomIndicator(responsive),
-
-              SizedBox(height: responsive.verticalPadding(10)),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -224,7 +271,7 @@ class _AuthSelectScreenState extends State<AuthSelectScreen>
           SizedBox(height: responsive.verticalPadding(16)),
 
           Text(
-            'Medics',
+            'Medics+',
             style: TextStyle(
               fontSize: responsive.fontSize(32),
               fontWeight: FontWeight.bold,
@@ -245,9 +292,21 @@ class _AuthSelectScreenState extends State<AuthSelectScreen>
         child: Column(
           children: [
             Text(
-              "Let's get started",
+              "Let's get started as a",
               style: TextStyle(
                 fontSize: responsive.fontSize(28),
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF2E3E5C),
+              ),
+            ),
+            SizedBox(height: responsive.verticalPadding(10)),
+            Text(
+              Provider.of<UserInfoProvider>(
+                context,
+                listen: false,
+              ).userModel.selectedRole,
+              style: TextStyle(
+                fontSize: responsive.fontSize(21),
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF2E3E5C),
               ),
@@ -280,14 +339,16 @@ class _AuthSelectScreenState extends State<AuthSelectScreen>
       opacity: _fadeAnimation,
       child: ScaleTransition(
         scale: _scaleAnimation,
-        child: Column(
-          children: [
-            _buildLoginButton(responsive),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildLoginButton(responsive),
 
-            SizedBox(height: responsive.verticalPadding(16)),
+              SizedBox(height: responsive.verticalPadding(16)),
 
-            _buildSignUpButton(responsive),
-          ],
+              _buildSignUpButton(responsive),
+            ],
+          ),
         ),
       ),
     );
