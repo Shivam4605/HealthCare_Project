@@ -7,6 +7,7 @@ import 'package:healthcare/src/controller/auth_provider/forgot_password_provider
 import 'package:healthcare/src/controller/auth_provider/login_provider.dart';
 import 'package:healthcare/src/controller/auth_provider/logout_provider.dart';
 import 'package:healthcare/src/controller/auth_provider/sign_up_provider.dart';
+import 'package:healthcare/src/controller/gemini_api_services.dart';
 import 'package:healthcare/src/controller/user_provider/user_role_info_provider.dart';
 import 'package:healthcare/src/view/common_screens/splash_screen.dart';
 import 'package:provider/provider.dart';
@@ -37,6 +38,7 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => SignUpProvider()),
         ChangeNotifierProvider(create: (context) => ForgotPasswordProvider()),
         ChangeNotifierProvider(create: (context) => LogoutProvider()),
+        ChangeNotifierProvider(create: (context) => ChatProvider()),
       ],
       child: const MaterialApp(
         debugShowCheckedModeBanner: false,

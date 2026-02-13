@@ -8,7 +8,7 @@ import 'package:healthcare/src/controller/local_storage/user_credential_local.da
 import 'package:healthcare/src/controller/user_provider/user_role_info_provider.dart';
 import 'package:healthcare/src/view/doctor_module/doctor_home_screen.dart';
 import 'package:healthcare/src/view/medical_module/medical_staff_home_screen.dart';
-import 'package:healthcare/src/view/patient_module/patient_home_screen.dart';
+import 'package:healthcare/src/view/patient_module/main_scaffold.dart';
 import 'package:provider/provider.dart';
 
 class LoginProvider with ChangeNotifier {
@@ -78,7 +78,7 @@ class LoginProvider with ChangeNotifier {
         Navigator.pushAndRemoveUntil(
           context,
           PageRouteBuilder(
-            pageBuilder: (_, animation, __) => PatientHomeScreen(),
+            pageBuilder: (_, animation, __) => MainScaffold(),
             transitionsBuilder: (_, animation, __, child) {
               const begin = Offset(1.0, 0.0);
               const end = Offset.zero;
@@ -268,7 +268,7 @@ class LoginProvider with ChangeNotifier {
           );
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (context) => PatientHomeScreen()),
+            MaterialPageRoute(builder: (context) => MainScaffold()),
             (route) => false,
           );
         } else if (userType == 'Doctor') {
