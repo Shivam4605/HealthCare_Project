@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:healthcare/src/controller/gemini_api_services.dart';
+import 'package:healthcare/src/controller/services/gemini_api_services.dart';
 import 'package:provider/provider.dart';
 
 class HealthChatbotScreen extends StatefulWidget {
