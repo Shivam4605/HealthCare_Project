@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:healthcare/src/view/patient_module/bottom_nav_bar.dart';
+import 'package:healthcare/src/view/patient_module/features/generic_screens/bottom_nav_bar.dart';
 import 'package:healthcare/src/view/patient_module/features/health_chat_bot.dart';
 import 'package:healthcare/src/view/patient_module/features/hospital_screen.dart';
 import 'package:healthcare/src/view/patient_module/features/patient_home_screen.dart';
-import 'package:healthcare/src/view/patient_module/features/patient_profile_screen.dart';
+import 'package:healthcare/src/view/patient_module/features/drawar_section_screen/patient_profile_screen.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -16,16 +16,30 @@ class _MainScaffoldState extends State<MainScaffold> {
   int _currentNavIndex = 0;
   final PageController _pageController = PageController();
 
-  final List<Widget> _pages = [
-    PatientHomeScreen(),
-    HospitalsScreen(),
-    HealthChatbotScreen(),
-    PatientProfileScreen(isArrowBack: false),
-  ];
+  late final List<Widget> _pages;
 
   final List<int> _navToPageIndex = const [0, 1, 2, 3];
 
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      const PatientHomeScreen(),
+      const HospitalsScreen(),
+      const HealthChatbotScreen(),
+      PatientProfileScreen(isArrowBack: false),
+    ];
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   void _onNavTap(int navIndex) {
+    if (_currentNavIndex == navIndex) return;
+
     final pageIndex = _navToPageIndex[navIndex];
     setState(() {
       _currentNavIndex = navIndex;
@@ -44,17 +58,19 @@ class _MainScaffoldState extends State<MainScaffold> {
       body: PageView(
         controller: _pageController,
         onPageChanged: (pageIndex) {
-          int newNavIndex = _navToPageIndex.indexOf(pageIndex);
-          if (newNavIndex != -1) {
+          final newNavIndex = _navToPageIndex.indexOf(pageIndex);
+          if (newNavIndex != -1 && newNavIndex != _currentNavIndex) {
             setState(() => _currentNavIndex = newNavIndex);
           }
         },
         physics: const NeverScrollableScrollPhysics(),
         children: _pages,
       ),
-      bottomNavigationBar: FloatingBubbleNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: _onNavTap,
+      bottomNavigationBar: RepaintBoundary(
+        child: FloatingBubbleNavBar(
+          currentIndex: _currentNavIndex,
+          onTap: _onNavTap,
+        ),
       ),
     );
   }

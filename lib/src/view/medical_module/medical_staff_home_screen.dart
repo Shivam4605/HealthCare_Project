@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:healthcare/src/controller/auth_provider/logout_provider.dart';
+import 'package:healthcare/src/controller/Providers/auth_provider/logout_provider.dart';
 import 'package:provider/provider.dart';
 
 class MedicalStaffHomeScreen extends StatefulWidget {

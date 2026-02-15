@@ -2,13 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:healthcare/src/controller/Providers/notification_provider/notification_service_provider.dart';
 import 'package:healthcare/src/controller/local_storage/user_credential_local.dart';
 import 'package:healthcare/src/util/app_assets.dart';
 import 'package:healthcare/src/util/app_color.dart';
 import 'package:healthcare/src/view/common_screens/onboarding_screen.dart';
 import 'package:healthcare/src/view/doctor_module/doctor_home_screen.dart';
 import 'package:healthcare/src/view/medical_module/medical_staff_home_screen.dart';
-import 'package:healthcare/src/view/patient_module/main_scaffold.dart';
+import 'package:healthcare/src/view/patient_module/features/generic_screens/main_scaffold.dart';
+import 'package:provider/provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -77,6 +79,8 @@ class _SplashScreenState extends State<SplashScreen>
     UserCredentials userCredentials = UserCredentials();
     Map<String, dynamic> data = await userCredentials.fetchUserCredentials();
     if (data['isLoggedIn'] && data['selectedRole'] == 'Patient') {
+      await context.read<NotificationProvider>().init();
+
       Navigator.pushAndRemoveUntil(
         context,
 
@@ -107,6 +111,7 @@ class _SplashScreenState extends State<SplashScreen>
         (route) => false,
       );
     } else if (data['isLoggedIn'] && data['selectedRole'] == 'Doctor') {
+      await context.read<NotificationProvider>().init();
       Navigator.pushAndRemoveUntil(
         context,
         PageRouteBuilder(
@@ -136,6 +141,7 @@ class _SplashScreenState extends State<SplashScreen>
         (route) => false,
       );
     } else if (data['isLoggedIn'] && data['selectedRole'] == 'Medical Staff') {
+      await context.read<NotificationProvider>().init();
       Navigator.pushAndRemoveUntil(
         context,
         PageRouteBuilder(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:healthcare/src/common_widgets/common_snackbar.dart';
-import 'package:healthcare/src/controller/user_provider/user_role_info_provider.dart';
+import 'package:healthcare/src/controller/Providers/user_provider/user_role_info_provider.dart';
 import 'package:healthcare/src/util/app_color.dart';
 import 'package:healthcare/src/view/common_screens/auth_select_screen.dart';
 import 'package:provider/provider.dart';

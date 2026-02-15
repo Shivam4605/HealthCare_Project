@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:healthcare/src/common_widgets/circular_progress_indicator.dart';
 import 'package:healthcare/src/common_widgets/smooth_transitions.dart';
-import 'package:healthcare/src/controller/auth_provider/forgot_password_provider.dart';
+import 'package:healthcare/src/controller/Providers/auth_provider/forgot_password_provider.dart';
 import 'package:healthcare/src/util/app_color.dart';
 import 'package:provider/provider.dart';
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:healthcare/src/common_widgets/circular_progress_indicator.dart';
 import 'package:healthcare/src/common_widgets/smooth_transitions.dart';
-import 'package:healthcare/src/controller/auth_provider/login_provider.dart';
-import 'package:healthcare/src/controller/user_provider/user_role_info_provider.dart';
+import 'package:healthcare/src/controller/Providers/auth_provider/login_provider.dart';
+import 'package:healthcare/src/controller/Providers/user_provider/user_role_info_provider.dart';
 import 'package:healthcare/src/util/app_color.dart';
 import 'package:healthcare/src/view/common_screens/login&signup_screens/forgot_password_screen.dart';
 import 'package:provider/provider.dart';
