@@ -1,10 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_advanced_drawer/flutter_advanced_drawer.dart';
-import 'package:healthcare/src/controller/auth_provider/logout_provider.dart';
+import 'package:healthcare/src/controller/Providers/auth_provider/logout_provider.dart';
 import 'package:healthcare/src/util/app_color.dart';
-import 'package:healthcare/src/view/patient_module/features/patient_notification_screen.dart';
-import 'package:healthcare/src/view/patient_module/features/patient_profile_screen.dart';
+import 'package:healthcare/src/view/patient_module/features/drawar_section_screen/favoriets_screen.dart';
+import 'package:healthcare/src/view/patient_module/features/drawar_section_screen/notification_screen.dart';
+import 'package:healthcare/src/view/patient_module/features/drawar_section_screen/patient_profile_screen.dart';
+
+import 'package:healthcare/src/view/patient_module/features/drawar_section_screen/pharmacy_cart_screen.dart';
+
+import 'package:healthcare/src/view/patient_module/features/generic_screens/drawer_screen.dart';
+
+import 'package:healthcare/src/view/patient_module/features/generic_screens/models_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -16,7 +22,10 @@ class PatientHomeScreen extends StatefulWidget {
 }
 
 class _PatientHomeScreenState extends State<PatientHomeScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   late AnimationController _animationController;
   late AnimationController _headerAnimationController;
   late AnimationController _fabAnimationController;
@@ -24,12 +33,15 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _headerScaleAnimation;
+  late final AnimationController _pulseController;
+  late final AnimationController _slideController;
 
   final PageController _carouselController = PageController();
   int _currentCarouselIndex = 0;
   Timer? _carouselTimer;
   bool _isLoading = false;
   bool _showLoading = false;
+  late final List<PromoModel> _infinitePromos;
 
   final String _userName = 'John Doe';
   final String _userEmail = 'john.doe@email.com';
@@ -41,6 +53,26 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
     _initializeAnimations();
     _startAutoPlay();
     _showLoadingIndicator();
+
+    _infinitePromos = List.from(_promos)
+      ..addAll(_promos)
+      ..addAll(_promos);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_carouselController.hasClients) {
+        _carouselController.jumpToPage(_promos.length);
+      }
+    });
+
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..forward();
   }
 
   void _showLoadingIndicator() {
@@ -101,13 +133,13 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
   }
 
   void _startAutoPlay() {
-    _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+    _carouselTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       if (_carouselController.hasClients && mounted) {
-        int nextPage = (_currentCarouselIndex + 1) % _promos.length;
+        final nextPage = _carouselController.page!.toInt() + 1;
         _carouselController.animateToPage(
           nextPage,
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.fastOutSlowIn,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
         );
       }
     });
@@ -120,6 +152,8 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
     _fabAnimationController.dispose();
     _carouselController.dispose();
     _carouselTimer?.cancel();
+    _pulseController.dispose();
+    _slideController.dispose();
     super.dispose();
   }
 
@@ -167,6 +201,65 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
           );
           break;
         case 'favorites':
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  const PatientFavoritesScreen(),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                    var scaleTween = Tween<double>(
+                      begin: 0.3,
+                      end: 1.0,
+                    ).chain(CurveTween(curve: Curves.easeOutCubic));
+
+                    var fadeTween = Tween<double>(
+                      begin: 0.0,
+                      end: 1.0,
+                    ).chain(CurveTween(curve: Curves.easeIn));
+
+                    return FadeTransition(
+                      opacity: animation.drive(fadeTween),
+                      child: ScaleTransition(
+                        scale: animation.drive(scaleTween),
+                        child: child,
+                      ),
+                    );
+                  },
+              transitionDuration: const Duration(milliseconds: 500),
+            ),
+          );
+          break;
+        case 'Pharmacy Cart':
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  const PharmacyCartScreen(),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                    var scaleTween = Tween<double>(
+                      begin: 0.3,
+                      end: 1.0,
+                    ).chain(CurveTween(curve: Curves.easeOutCubic));
+
+                    var fadeTween = Tween<double>(
+                      begin: 0.0,
+                      end: 1.0,
+                    ).chain(CurveTween(curve: Curves.easeIn));
+
+                    return FadeTransition(
+                      opacity: animation.drive(fadeTween),
+                      child: ScaleTransition(
+                        scale: animation.drive(scaleTween),
+                        child: child,
+                      ),
+                    );
+                  },
+              transitionDuration: const Duration(milliseconds: 500),
+            ),
+          );
+          break;
         case 'history':
         case 'prescriptions':
         case 'payments':
@@ -449,8 +542,22 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
     });
   }
 
+  void _handlePromoTap(int index) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_promos[index].title),
+        backgroundColor: _promos[index].color1,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     return AdvancedDrawerWrapper(
       onHomeTap: () {},
       onItemTap: _handleDrawerItem,
@@ -599,9 +706,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
               Builder(
                 builder: (context) {
                   final wrapperState = context
-                      .findAncestorStateOfType<_AdvancedDrawerWrapperState>();
+                      .findAncestorStateOfType<AdvancedDrawerWrapperState>();
                   return GestureDetector(
-                    onTap: wrapperState?._handleMenuButtonPressed,
+                    onTap: () => wrapperState?.handleMenuButtonPressed(),
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -650,7 +757,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
                 ],
               ),
               GestureDetector(
-                onTap: () {
+                onTap: () async {
                   Navigator.push(
                     context,
                     PageRouteBuilder(
@@ -679,6 +786,11 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
                       transitionDuration: const Duration(milliseconds: 500),
                     ),
                   );
+
+                  // LocalNotificationService.showNotification(
+                  //   title: "Working ✅",
+                  //   body: "Notifications working correctly",
+                  // );
                 },
                 child: Container(
                   padding: const EdgeInsets.all(12),
@@ -694,6 +806,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
                     ],
                   ),
                   child: Stack(
+                    clipBehavior: Clip.none,
                     children: [
                       const Icon(
                         Icons.notifications_rounded,
@@ -701,14 +814,35 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
                         size: 24,
                       ),
                       Positioned(
-                        right: 0,
-                        top: 0,
+                        right: -6,
+                        top: -6,
                         child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
+                          padding: const EdgeInsets.all(2),
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          decoration: BoxDecoration(
                             color: Colors.red,
                             shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.red.withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              "3",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -829,7 +963,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
               return TweenAnimationBuilder<double>(
                 tween: Tween<double>(begin: 0.0, end: 1.0),
                 duration: Duration(milliseconds: 600 + (index * 100)),
-                curve: Curves.easeOutCubic, // Changed from elasticOut
+                curve: Curves.easeOutCubic,
                 builder: (context, value, child) {
                   final clampedValue = value.clamp(0.0, 1.0);
                   return Transform.scale(
@@ -889,29 +1023,451 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
     return SliverToBoxAdapter(
       child: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF13BDAC), Color(0xFF0FA394)],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF13BDAC).withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.local_offer_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Special Offers',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2E3E5C),
+                      ),
+                    ),
+                  ],
+                ),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.red.withOpacity(0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      ScaleTransition(
+                        scale: Tween<double>(
+                          begin: 0.8,
+                          end: 1.2,
+                        ).animate(_pulseController),
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'LIVE',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           SizedBox(
-            height: 180,
-            child: PageView.builder(
-              controller: _carouselController,
-              onPageChanged: (index) {
-                setState(() => _currentCarouselIndex = index);
-              },
-              itemCount: _promos.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: GestureDetector(
-                    onTap: _handleTabSelected,
-                    child: _buildPromoCard(_promos[index]),
+            height: 200,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.02),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                PageView.builder(
+                  controller: _carouselController,
+                  onPageChanged: (index) {
+                    setState(() {
+                      if (index == 0) {
+                        _carouselController.jumpToPage(_promos.length);
+                      } else if (index == _infinitePromos.length - 1) {
+                        _carouselController.jumpToPage(_promos.length - 1);
+                      } else {
+                        _currentCarouselIndex = index % _promos.length;
+                      }
+                    });
+                  },
+                  itemCount: _infinitePromos.length,
+                  physics: const BouncingScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    final actualIndex = index % _promos.length;
+                    final isCenter =
+                        index % _promos.length == _currentCarouselIndex;
+
+                    return AnimatedBuilder(
+                      animation: _carouselController,
+                      builder: (context, child) {
+                        double scale = 1.0;
+                        double opacity = 1.0;
+
+                        if (_carouselController.hasClients) {
+                          final position = _carouselController.page ?? 0;
+                          final distance = (index - position).abs();
+
+                          if (distance <= 1) {
+                            scale = 1.0 - (distance * 0.15);
+                            opacity = 1.0;
+                          } else {
+                            scale = 0.7;
+                            opacity = 0.5;
+                          }
+                        }
+
+                        return GestureDetector(
+                          onTap: () => _handlePromoTap(actualIndex),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isCenter ? 0 : 8,
+                            ),
+                            child: Transform.scale(
+                              scale: scale,
+                              child: Opacity(
+                                opacity: opacity,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOutCubic,
+                                  margin: EdgeInsets.only(
+                                    top: isCenter ? 0 : 10,
+                                    bottom: isCenter ? 0 : 10,
+                                  ),
+                                  child: _buildEnhancedPromoCard(
+                                    _promos[actualIndex],
+                                    isCenter,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          _buildEnhancedIndicators(),
+
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnhancedPromoCard(PromoModel promo, bool isCenter) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [promo.color1, promo.color2],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: promo.color1.withOpacity(isCenter ? 0.4 : 0.2),
+            blurRadius: isCenter ? 25 : 15,
+            offset: const Offset(0, 8),
+          ),
+          if (isCenter)
+            BoxShadow(
+              color: Colors.white.withOpacity(0.3),
+              blurRadius: 30,
+              spreadRadius: -5,
+            ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -20,
+            top: -20,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.1),
+              ),
+            ),
+          ),
+          Positioned(
+            left: -10,
+            bottom: -10,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.08),
+              ),
+            ),
+          ),
+
+          Positioned(
+            right: 10,
+            bottom: 10,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.9, end: 1.1),
+              duration: const Duration(milliseconds: 2000),
+              curve: Curves.easeInOut,
+              builder: (context, scale, child) {
+                return Transform.scale(
+                  scale: scale,
+                  child: Opacity(
+                    opacity: 0.15,
+                    child: Icon(promo.icon, size: 70, color: Colors.white),
                   ),
                 );
               },
             ),
           ),
-          const SizedBox(height: 12),
-          _buildCarouselIndicators(_promos.length),
+
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.local_offer_rounded,
+                        size: 12,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'LIMITED',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [Colors.white, Color(0xFFFFF9C4)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ).createShader(bounds),
+                  child: Text(
+                    promo.title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      height: 1.3,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black26,
+                          blurRadius: 4,
+                          offset: Offset(1, 1),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 4),
+
+                Text(
+                  promo.description,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withOpacity(0.9),
+                    height: 1.4,
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                if (isCenter)
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 500),
+                    builder: (context, value, child) {
+                      return Transform.scale(
+                        scale: 0.8 + (value * 0.2),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.5 * value),
+                                blurRadius: 15,
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: () =>
+                                _handlePromoTap(_promos.indexOf(promo)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: promo.color1,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  promo.buttonText,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 16,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildEnhancedIndicators() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(_promos.length, (index) {
+        final isSelected = _currentCarouselIndex == index;
+
+        return GestureDetector(
+          onTap: () {
+            _carouselController.animateToPage(
+              index + _promos.length,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+            );
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: isSelected ? 32 : 8,
+            height: 8,
+            decoration: BoxDecoration(
+              gradient: isSelected
+                  ? const LinearGradient(
+                      colors: [Color(0xFF13BDAC), Color(0xFF0FA394)],
+                    )
+                  : null,
+              color: isSelected ? null : Colors.grey[300],
+              borderRadius: BorderRadius.circular(4),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFF13BDAC).withOpacity(0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: isSelected
+                ? Center(
+                    child: Container(
+                      width: 4,
+                      height: 4,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  )
+                : null,
+          ),
+        );
+      }),
     );
   }
 
@@ -1153,7 +1709,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0.0, end: 1.0),
       duration: Duration(milliseconds: 700 + (index * 150)),
-      curve: Curves.easeOutCubic, // Changed from elasticOut
+      curve: Curves.easeOutCubic,
       builder: (context, value, child) {
         final clampedValue = value.clamp(0.0, 1.0);
         return Transform.scale(scale: clampedValue, child: child);
@@ -1471,73 +2027,6 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
   }
 }
 
-// Model Classes
-class CategoryItem {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final Gradient gradient;
-
-  CategoryItem({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.gradient,
-  });
-}
-
-class PromoModel {
-  final String title;
-  final String description;
-  final String buttonText;
-  final Color color1;
-  final Color color2;
-  final IconData icon;
-
-  PromoModel({
-    required this.title,
-    required this.description,
-    required this.buttonText,
-    required this.color1,
-    required this.color2,
-    required this.icon,
-  });
-}
-
-class DoctorModel {
-  final String id;
-  final String name;
-  final String specialty;
-  final String imageUrl;
-  final double rating;
-  final String distance;
-
-  DoctorModel({
-    required this.id,
-    required this.name,
-    required this.specialty,
-    required this.imageUrl,
-    required this.rating,
-    required this.distance,
-  });
-}
-
-class ArticleModel {
-  final String id;
-  final String title;
-  final String imageUrl;
-  final String date;
-  final String category;
-
-  ArticleModel({
-    required this.id,
-    required this.title,
-    required this.imageUrl,
-    required this.date,
-    required this.category,
-  });
-}
-
 final List<PromoModel> _promos = [
   PromoModel(
     title: 'Early protection for\nyour family health',
@@ -1623,426 +2112,3 @@ final List<ArticleModel> _healthArticles = [
     category: 'Wellness',
   ),
 ];
-
-class DrawerTheme {
-  static const Color primaryBlue = Color(0xFF2563EB);
-  static const Color darkText = Color(0xFF1E293B);
-  static const Color lightText = Color(0xFF64748B);
-
-  static const double drawerBorderRadius = 20;
-  static const Duration animationDuration = Duration(milliseconds: 300);
-
-  static BoxDecoration get headerGradient => const BoxDecoration(
-    gradient: LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [primaryBlue, Color(0xFF2F5ADD)],
-    ),
-  );
-
-  static BoxDecoration get itemBackground => BoxDecoration(
-    color: Colors.transparent,
-    borderRadius: BorderRadius.circular(12),
-  );
-
-  static BoxDecoration get iconBackground => BoxDecoration(
-    color: primaryBlue.withOpacity(0.1),
-    borderRadius: BorderRadius.circular(10),
-  );
-}
-
-class AdvancedDrawerWrapper extends StatefulWidget {
-  final Widget child;
-  final VoidCallback onHomeTap;
-  final Function(String) onItemTap;
-  final String userName;
-  final String userEmail;
-  final String? userAvatarUrl;
-  final int favoriteCount;
-
-  const AdvancedDrawerWrapper({
-    super.key,
-    required this.child,
-    required this.onHomeTap,
-    required this.onItemTap,
-    required this.userName,
-    required this.userEmail,
-    this.userAvatarUrl,
-    this.favoriteCount = 0,
-  });
-
-  @override
-  State<AdvancedDrawerWrapper> createState() => _AdvancedDrawerWrapperState();
-}
-
-class _AdvancedDrawerWrapperState extends State<AdvancedDrawerWrapper> {
-  late final AdvancedDrawerController _drawerController;
-
-  @override
-  void initState() {
-    super.initState();
-    _drawerController = AdvancedDrawerController();
-  }
-
-  @override
-  void dispose() {
-    _drawerController.dispose();
-    super.dispose();
-  }
-
-  void _handleMenuButtonPressed() {
-    _drawerController.showDrawer();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AdvancedDrawer(
-      controller: _drawerController,
-      backdropColor: DrawerTheme.primaryBlue.withOpacity(0.15),
-      animationDuration: DrawerTheme.animationDuration,
-      openRatio: 0.75,
-      openScale: 0.92,
-      rtlOpening: false,
-      disabledGestures: false,
-      drawer: _buildOptimizedDrawer(),
-      childDecoration: const BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(24)),
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.all(Radius.circular(24)),
-        child: widget.child,
-      ),
-    );
-  }
-
-  Widget _buildOptimizedDrawer() {
-    return Container(
-      color: Colors.white,
-      child: Column(
-        children: [
-          _buildHeader(),
-          Expanded(child: _buildListView()),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 25),
-      decoration: DrawerTheme.headerGradient,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildAvatar(),
-          const SizedBox(height: 16),
-          _buildUserInfo(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAvatar() {
-    return GestureDetector(
-      onTap: () {
-        _drawerController.hideDrawer();
-        widget.onItemTap('profile');
-      },
-      child: Padding(
-        padding: const EdgeInsets.only(top: 15),
-        child: Container(
-          width: 70,
-          height: 70,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 3),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: ClipOval(
-            child:
-                widget.userAvatarUrl != null && widget.userAvatarUrl!.isNotEmpty
-                ? Image.network(
-                    widget.userAvatarUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return _buildAvatarPlaceholder();
-                    },
-                  )
-                : _buildAvatarPlaceholder(),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAvatarPlaceholder() {
-    return Container(
-      color: Colors.white,
-      child: const Icon(Icons.person, size: 35, color: DrawerTheme.primaryBlue),
-    );
-  }
-
-  Widget _buildUserInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.userName,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            const Icon(Icons.email_rounded, size: 14, color: Colors.white70),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                widget.userEmail,
-                style: const TextStyle(fontSize: 13, color: Colors.white70),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildListView() {
-    return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      children: [
-        _buildSection('MAIN MENU'),
-        _buildDrawerItem(
-          icon: Icons.home_rounded,
-          title: 'Home',
-          onTap: () {
-            _drawerController.hideDrawer();
-            widget.onHomeTap();
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.person_rounded,
-          title: 'My Profile',
-          onTap: () {
-            _drawerController.hideDrawer();
-            widget.onItemTap('profile');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.favorite_rounded,
-          title: 'Favorites',
-          onTap: () {
-            _drawerController.hideDrawer();
-            widget.onItemTap('favorites');
-          },
-          badge: widget.favoriteCount > 0
-              ? widget.favoriteCount.toString()
-              : null,
-        ),
-        _buildDrawerItem(
-          icon: Icons.history_rounded,
-          title: 'Appointment History',
-          onTap: () {
-            _drawerController.hideDrawer();
-            widget.onItemTap('history');
-          },
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Divider(height: 1),
-        ),
-        _buildSection('MEDICAL'),
-        _buildDrawerItem(
-          icon: Icons.medical_services_rounded,
-          title: 'My Prescriptions',
-          onTap: () {
-            _drawerController.hideDrawer();
-            widget.onItemTap('prescriptions');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.payment_rounded,
-          title: 'Payment Methods',
-          onTap: () {
-            _drawerController.hideDrawer();
-            widget.onItemTap('payments');
-          },
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Divider(height: 1),
-        ),
-        _buildSection('SUPPORT'),
-        _buildDrawerItem(
-          icon: Icons.settings_rounded,
-          title: 'Settings',
-          onTap: () {
-            _drawerController.hideDrawer();
-            widget.onItemTap('settings');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.help_rounded,
-          title: 'Help & Support',
-          onTap: () {
-            _drawerController.hideDrawer();
-            widget.onItemTap('help');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.logout_rounded,
-          title: 'Logout',
-          onTap: () {
-            _drawerController.hideDrawer();
-            widget.onItemTap('logout');
-          },
-          color: Colors.red,
-        ),
-        _buildVersionInfo(),
-        SizedBox(height: 100),
-      ],
-    );
-  }
-
-  Widget _buildSection(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: Colors.grey[500],
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    String? badge,
-    Color? color,
-  }) {
-    final itemColor = color ?? DrawerTheme.primaryBlue;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            children: [
-              _buildIcon(icon, itemColor),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: itemColor == Colors.red
-                        ? Colors.red
-                        : DrawerTheme.darkText,
-                  ),
-                ),
-              ),
-              if (badge != null) _buildBadge(badge),
-              if (badge == null) _buildArrow(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildIcon(IconData icon, Color color) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Icon(icon, color: color, size: 22),
-    );
-  }
-
-  Widget _buildBadge(String badge) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: DrawerTheme.primaryBlue,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        badge,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildArrow() {
-    return Icon(
-      Icons.arrow_forward_ios_rounded,
-      size: 14,
-      color: Colors.grey[400],
-    );
-  }
-
-  Widget _buildVersionInfo() {
-    return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Build With Flutter',
-                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-              ),
-              const SizedBox(height: 2),
-            ],
-          ),
-          Icon(
-            Icons.favorite_rounded,
-            size: 22,
-            color: DrawerTheme.primaryBlue.withOpacity(0.5),
-          ),
-        ],
-      ),
-    );
-  }
-}

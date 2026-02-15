@@ -4,11 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:healthcare/src/common_widgets/common_snackbar.dart';
+import 'package:healthcare/src/controller/Providers/notification_provider/notification_service_provider.dart';
 import 'package:healthcare/src/controller/local_storage/user_credential_local.dart';
-import 'package:healthcare/src/controller/user_provider/user_role_info_provider.dart';
+import 'package:healthcare/src/controller/Providers/user_provider/user_role_info_provider.dart';
 import 'package:healthcare/src/view/doctor_module/doctor_home_screen.dart';
 import 'package:healthcare/src/view/medical_module/medical_staff_home_screen.dart';
-import 'package:healthcare/src/view/patient_module/main_scaffold.dart';
+import 'package:healthcare/src/view/patient_module/features/generic_screens/main_scaffold.dart';
 import 'package:provider/provider.dart';
 
 class LoginProvider with ChangeNotifier {
@@ -58,6 +59,7 @@ class LoginProvider with ChangeNotifier {
         email: email.text.trim(),
         password: password.text.trim(),
       );
+      await context.read<NotificationProvider>().init();
       UserCredentials userCredentials = UserCredentials();
       await userCredentials.setUserCredentials(
         email: email.text.trim(),
@@ -227,6 +229,7 @@ class LoginProvider with ChangeNotifier {
 
       UserCredentials userCredentials = UserCredentials();
       userCredential = await _firebaseAuth.signInWithCredential(credential);
+      await context.read<NotificationProvider>().init();
 
       final user = userCredential!.user;
 

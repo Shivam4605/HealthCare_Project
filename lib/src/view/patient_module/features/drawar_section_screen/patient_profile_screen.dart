@@ -1,6 +1,12 @@
 import 'dart:async';
+import 'dart:developer';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:healthcare/src/controller/auth_provider/logout_provider.dart';
+import 'package:healthcare/src/common_widgets/circular_progress_indicator.dart';
+import 'package:healthcare/src/common_widgets/common_snackbar.dart';
+import 'package:healthcare/src/controller/Providers/auth_provider/logout_provider.dart';
+import 'package:healthcare/src/controller/Providers/notification_provider/notification_service_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 class PatientProfileScreen extends StatefulWidget {
@@ -477,13 +483,16 @@ class _PatientProfileScreenState extends State<PatientProfileScreen>
 
   @override
   Widget build(BuildContext context) {
+    final notificationProvider = Provider.of<NotificationProvider>(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFD),
-      body: _showLoading ? _buildLoadingScreen() : _buildMainContent(),
+      body: _showLoading
+          ? _buildLoadingScreen()
+          : _buildMainContent(notificationProvider),
     );
   }
 
-  Widget _buildMainContent() {
+  Widget _buildMainContent(NotificationProvider notification) {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
@@ -508,7 +517,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen>
                       const SizedBox(height: 20),
                       _buildMedicalInfoSection(),
                       const SizedBox(height: 20),
-                      _buildSettingsSection(),
+                      _buildSettingsSection(notification),
                       const SizedBox(height: 20),
                       _buildActionButtons(),
                       const SizedBox(height: 40),
@@ -1044,7 +1053,107 @@ class _PatientProfileScreenState extends State<PatientProfileScreen>
     );
   }
 
-  Widget _buildSettingsSection() {
+  Future<bool?> _showNotificationDialog() {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (BuildContext context) {
+        return Dialog(
+          elevation: 24,
+          insetAnimationDuration: const Duration(milliseconds: 300),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+          ),
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.elasticOut,
+            builder: (context, scale, child) {
+              return Transform.scale(scale: scale, child: child);
+            },
+            child: Container(
+              width: 340,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Colors.white, Color(0xFFF8F9FF)],
+                ),
+                borderRadius: BorderRadius.circular(32),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF13BDAC), Color(0xFF0EA5E9)],
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.notifications_active,
+                      color: Colors.white,
+                      size: 40,
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    "Enable Notifications?",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2E3E5C),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  const Text(
+                    "Allow reminders, updates and important alerts.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 15, color: Color(0xFF64748B)),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text("Cancel"),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child:
+                              Provider.of<NotificationProvider>(
+                                context,
+                                listen: false,
+                              ).enabled
+                              ? const Text("Disable")
+                              : const Text("Allow"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSettingsSection(NotificationProvider notification) {
     return _buildSection(
       title: 'Settings',
       icon: Icons.settings_rounded,
@@ -1057,26 +1166,79 @@ class _PatientProfileScreenState extends State<PatientProfileScreen>
             icon: Icons.notifications_outlined,
             title: 'Push Notifications',
             subtitle: 'Receive appointment reminders',
-            value: _notificationsEnabled,
-            onChanged: (value) => setState(() => _notificationsEnabled = value),
+            value: notification.enabled,
+            onChanged: (value) async {
+              final s = await FirebaseMessaging.instance
+                  .getNotificationSettings();
+              log("${s.authorizationStatus}");
+              final confirm = await _showNotificationDialog();
+              if (confirm != true) return;
+
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => Center(
+                  child: CustomCircularProgressIndicator()
+                      .circularProgressIndicator(),
+                ),
+              );
+
+              try {
+                final messaging = FirebaseMessaging.instance;
+
+                if (value) {
+                  final settings = await messaging.getNotificationSettings();
+
+                  if (settings.authorizationStatus ==
+                      AuthorizationStatus.notDetermined) {
+                    final result = await messaging.requestPermission();
+
+                    if (result.authorizationStatus !=
+                        AuthorizationStatus.authorized) {
+                      Navigator.pop(context);
+                      return;
+                    }
+                  }
+
+                  if (settings.authorizationStatus ==
+                      AuthorizationStatus.denied) {
+                    await openAppSettings();
+                    Navigator.pop(context);
+                    return;
+                  }
+
+                  await notification.enableNotifications();
+
+                  CommonSnackbar.showAnimatedSnackBar(
+                    context: context,
+                    message: 'Notification Enabled Successfully',
+                    backgroundColor: Colors.green,
+                    textColor: Colors.white,
+                    durationSeconds: 2,
+                    icon: Icons.check_circle_outline,
+                  );
+                } else {
+                  await notification.disableNotifications();
+
+                  CommonSnackbar.showAnimatedSnackBar(
+                    context: context,
+                    message: 'Notification Disabled Successfully',
+                    backgroundColor: Colors.green,
+                    textColor: Colors.white,
+                    durationSeconds: 2,
+                    icon: Icons.check_circle_outline,
+                  );
+                }
+              } catch (e) {
+                log("$e");
+              } finally {
+                Navigator.of(context, rootNavigator: true).pop();
+              }
+            },
           ),
+
           const SizedBox(height: 12),
-          _buildSwitchTile(
-            icon: Icons.fingerprint,
-            title: 'Biometric Login',
-            subtitle: 'Use fingerprint or face ID',
-            value: _biometricEnabled,
-            onChanged: (value) => setState(() => _biometricEnabled = value),
-          ),
-          const SizedBox(height: 12),
-          _buildSwitchTile(
-            icon: Icons.dark_mode_outlined,
-            title: 'Dark Mode',
-            subtitle: 'Switch to dark theme',
-            value: _darkModeEnabled,
-            onChanged: (value) => setState(() => _darkModeEnabled = value),
-          ),
-          const SizedBox(height: 12),
+
           _buildSwitchTile(
             icon: Icons.location_on_outlined,
             title: 'Location Services',
