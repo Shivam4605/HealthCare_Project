@@ -9,7 +9,6 @@ import 'package:healthcare/src/controller/Providers/auth_provider/login_provider
 import 'package:healthcare/src/controller/Providers/auth_provider/logout_provider.dart';
 import 'package:healthcare/src/controller/Providers/auth_provider/sign_up_provider.dart';
 import 'package:healthcare/src/controller/Providers/notification_provider/local_notification.dart';
-
 import 'package:healthcare/src/controller/Providers/notification_provider/notification_service_provider.dart';
 import 'package:healthcare/src/controller/services/gemini_api_services.dart';
 import 'package:healthcare/src/controller/Providers/user_provider/user_role_info_provider.dart';
