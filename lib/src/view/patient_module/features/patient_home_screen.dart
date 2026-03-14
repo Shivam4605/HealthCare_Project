@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:healthcare/src/controller/Providers/auth_provider/logout_provider.dart';
+import 'package:healthcare/src/controller/Providers/notification_provider/local_notification.dart';
+import 'package:healthcare/src/controller/Providers/notification_provider/notification_service_provider.dart';
 import 'package:healthcare/src/util/app_color.dart';
 import 'package:healthcare/src/view/patient_module/features/drawar_section_screen/favoriets_screen.dart';
 import 'package:healthcare/src/view/patient_module/features/drawar_section_screen/notification_screen.dart';
@@ -205,7 +207,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
             context,
             PageRouteBuilder(
               pageBuilder: (context, animation, secondaryAnimation) =>
-                  const PatientFavoritesScreen(),
+                  const PatientFavoritesScreenEnhanced(),
               transitionsBuilder:
                   (context, animation, secondaryAnimation, child) {
                     var scaleTween = Tween<double>(
@@ -758,39 +760,44 @@ class _PatientHomeScreenState extends State<PatientHomeScreen>
               ),
               GestureDetector(
                 onTap: () async {
-                  Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) =>
-                          const NotificationScreen(),
-                      transitionsBuilder:
-                          (context, animation, secondaryAnimation, child) {
-                            var scaleTween = Tween<double>(
-                              begin: 0.6,
-                              end: 1.0,
-                            ).chain(CurveTween(curve: Curves.easeOutCubic));
+                  // Navigator.push(
+                  //   context,
+                  //   PageRouteBuilder(
+                  //     pageBuilder: (context, animation, secondaryAnimation) =>
+                  //         const NotificationScreen(),
+                  //     transitionsBuilder:
+                  //         (context, animation, secondaryAnimation, child) {
+                  //           var scaleTween = Tween<double>(
+                  //             begin: 0.6,
+                  //             end: 1.0,
+                  //           ).chain(CurveTween(curve: Curves.easeOutCubic));
 
-                            var fadeTween = Tween<double>(
-                              begin: 0.0,
-                              end: 1.0,
-                            ).chain(CurveTween(curve: Curves.easeIn));
+                  //           var fadeTween = Tween<double>(
+                  //             begin: 0.0,
+                  //             end: 1.0,
+                  //           ).chain(CurveTween(curve: Curves.easeIn));
 
-                            return FadeTransition(
-                              opacity: animation.drive(fadeTween),
-                              child: ScaleTransition(
-                                scale: animation.drive(scaleTween),
-                                child: child,
-                              ),
-                            );
-                          },
-                      transitionDuration: const Duration(milliseconds: 500),
-                    ),
-                  );
+                  //           return FadeTransition(
+                  //             opacity: animation.drive(fadeTween),
+                  //             child: ScaleTransition(
+                  //               scale: animation.drive(scaleTween),
+                  //               child: child,
+                  //             ),
+                  //           );
+                  //         },
+                  //     transitionDuration: const Duration(milliseconds: 500),
+                  //   ),
+                  // );
 
                   // LocalNotificationService.showNotification(
                   //   title: "Working ✅",
                   //   body: "Notifications working correctly",
                   // );
+
+                  Provider.of<NotificationProvider>(
+                    context,
+                    listen: false,
+                  ).sendTestNotification();
                 },
                 child: Container(
                   padding: const EdgeInsets.all(12),
